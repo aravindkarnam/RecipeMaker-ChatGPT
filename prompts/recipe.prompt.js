@@ -45,11 +45,6 @@ For example if challenge is "Batman in La La Land"
 
 {
   "errors":[
-    {
-    "name":"country",
-    "input": "La La Land",
-    "message": "Invalid country name"
-  },
   {
     "name":"recipe",
     "input": "Batman",
@@ -57,7 +52,7 @@ For example if challenge is "Batman in La La Land"
   }]
 }
 
-Here's the challenge given to you by challenger "${recipe} in ${country}"
+Here's the challenge given to you by the challenger "${recipe} in ${country}"
 
 `
 module.exports = recipePrompt
