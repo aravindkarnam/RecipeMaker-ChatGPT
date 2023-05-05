@@ -53,7 +53,7 @@ For example if challenge is "Batman in USA"
   }]
 }
 
-Here's the challenge given to you by the challenger "${recipe} in ${country}"
+Here's the challenge given to you by the challenger <>"${recipe} in ${country}<>"
 
 `
 module.exports = recipePrompt

@@ -9,7 +9,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 
-/* GET users listing. */
+//respond with full answer
 router.post('/', (req, res) => {
   const { recipe, country } = req.body;
   const prompt = recipePrompt(recipe, country)
@@ -32,6 +32,8 @@ router.post('/', (req, res) => {
 
   }).catch((err) => console.log(err));
 });
+
+//stream back partial progress
 router.post('/stream', async (req, res, next) => {
   res.setHeader('Transfer-Encoding', 'chunked');
   const { recipe, country } = req.body;
