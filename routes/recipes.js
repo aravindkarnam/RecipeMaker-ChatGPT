@@ -21,7 +21,7 @@ router.post('/', (req, res) => {
   }).then(({ data }) => {
     const { choices, usage } = data;
     const { ingredients, errors } = JSON.parse((choices[0] && choices[0].text) || '{"errors":[]}')
-    //console.log(usage)
+    console.log(usage)
     if (ingredients) {
       //console.log(ingredients)
       res.json(ingredients);
@@ -56,7 +56,7 @@ router.post('/stream', async (req, res, next) => {
           }
           else{
             const parsed = JSON.parse(message);
-            //console.log(parsed.choices[0].text);
+            console.log(parsed.choices[0].text);
             res.write(parsed.choices[0].text);
           }
         } catch (error) {
