@@ -11,8 +11,8 @@ const openai = new OpenAIApi(configuration);
 
 //respond with full answer
 router.post('/', (req, res) => {
-  const { recipe, country } = req.body;
-  const prompt = recipePrompt(recipe, country)
+  const { recipe, currency } = req.body;
+  const prompt = recipePrompt(recipe, currency)
   openai.createCompletion({
     model: "text-davinci-003",
     prompt,
@@ -21,7 +21,6 @@ router.post('/', (req, res) => {
   }).then(({ data }) => {
     const { choices, usage } = data;
     const { ingredients, errors } = JSON.parse((choices[0] && choices[0].text) || '{"errors":[]}')
-    console.log(usage)
     if (ingredients) {
       //console.log(ingredients)
       res.json(ingredients);
@@ -36,8 +35,8 @@ router.post('/', (req, res) => {
 //stream back partial progress
 router.post('/stream', async (req, res, next) => {
   res.setHeader('Transfer-Encoding', 'chunked');
-  const { recipe, country } = req.body;
-  const prompt = recipePrompt(recipe, country)
+  const { recipe, currency } = req.body;
+  const prompt = recipePrompt(recipe, currency)
   try {
     const completion = await openai.createCompletion({
       model: "text-davinci-003",
@@ -56,7 +55,6 @@ router.post('/stream', async (req, res, next) => {
           }
           else{
             const parsed = JSON.parse(message);
-            console.log(parsed.choices[0].text);
             res.write(parsed.choices[0].text);
           }
         } catch (error) {
