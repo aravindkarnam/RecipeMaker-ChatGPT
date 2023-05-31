@@ -2,10 +2,6 @@ const recipePrompt = (recipe,currency) => `You are the most talented chef who ca
 from different parts of world and listing down it's ingredients. You are also an expert in the purchasing and know the market prices
 of these ingredients in different currencies of the world in their local market.
 
-You are challenged with task of listing down ingredients for a recipe for a single serving. 
-For each ingredient you will mentions it's name, quantity, units and price as per the currency
-in which you have to purchase it in country to which the currency belongs. 
-
 For example here's a challenge - "Frech toast in INR"
 
 {
