@@ -8,6 +8,37 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+async function* chunksToLines(chunksAsync) {
+  let previous = '';
+  for await (const chunk of chunksAsync) {
+    const bufferChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    previous += bufferChunk;
+    let eolIndex;
+    while ((eolIndex = previous.indexOf('\n')) >= 0) {
+      // line includes the EOL
+      const line = previous.slice(0, eolIndex + 1).trimEnd();
+      if (line === 'data: [DONE]') {
+        break;
+      }
+      if (line.startsWith('data: '))
+        yield line
+      previous = previous.slice(eolIndex + 1);
+    }
+  }
+}
+
+async function* linesToMessages(
+  linesAsync
+) {
+  for await (const line of linesAsync) {
+    const message = line.substring('data :'.length);
+    yield message;
+  }
+}
+
+async function* streamCompletion(data) {
+  yield* linesToMessages(chunksToLines(data));
+}
 
 //respond with full answer
 router.post('/', (req, res) => {
@@ -22,14 +53,17 @@ router.post('/', (req, res) => {
     const { choices, usage } = data;
     const { ingredients, errors } = JSON.parse((choices[0] && choices[0].text) || '{"errors":[]}')
     if (ingredients) {
-      //console.log(ingredients)
       res.json(ingredients);
     }
     else {
       res.status(400).json(errors);
     }
 
-  }).catch((err) => console.log(err));
+  }).catch((error) => {
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    }
+  });
 });
 
 //stream back partial progress
@@ -45,23 +79,15 @@ router.post('/stream', async (req, res, next) => {
       temperature: 0.2,
       stream: true
     }, { responseType: 'stream' })
-    completion.data.on('data', data => {
-      const lines = data.toString().split('\n').filter(line => line.trim() !== '');
-      for (const line of lines) {
-        const message = line.replace(/^data: /, '');
-        try {
-          if (message === '[DONE]') {
-            res.end()
-          }
-          else{
-            const parsed = JSON.parse(message);
-            res.write(parsed.choices[0].text);
-          }
-        } catch (error) {
-          console.error('Could not JSON parse stream message', message, error);
-        }
+
+  for await (const message of streamCompletion(completion.data)) {
+      try {
+        const parsed = JSON.parse(message)
+        res.write(parsed.choices[0].text);
+      } catch (error) {
+        console.error('Could not JSON parse stream message', message, error);
       }
-    });
+    }
   }
   catch (error) {
     if (error.response?.status) {
@@ -78,6 +104,9 @@ router.post('/stream', async (req, res, next) => {
     } else {
       console.error('An error occurred during OpenAI request', error);
     }
+  }
+  finally{
+    res.end()
   }
 });
 
