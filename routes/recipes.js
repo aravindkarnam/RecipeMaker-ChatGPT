@@ -44,24 +44,29 @@ async function* streamCompletion(data) {
 router.post('/', (req, res) => {
   const { recipe, currency } = req.body;
   const prompt = recipePrompt(recipe, currency)
+  console.log(prompt)
   openai.createCompletion({
     model: "text-davinci-003",
     prompt,
-    max_tokens: 2000,
+    max_tokens: 3000,
     temperature: 0.2
   }).then(({ data }) => {
     const { choices, usage } = data;
-    const { ingredients, errors } = JSON.parse((choices[0] && choices[0].text) || '{"errors":[]}')
-    if (ingredients) {
-      res.json(ingredients);
+    console.log(usage)
+    if (choices[0]) {
+      res.send(choices[0].text);
     }
     else {
-      res.status(400).json(errors);
+      res.status(400).json({});
     }
 
   }).catch((error) => {
+    console.log(error)
     if (error.response) {
       res.status(error.response.status).json(error.response.data);
+    }
+    else{
+      res.send(JSON.stringify(error))
     }
   });
 });
@@ -75,7 +80,7 @@ router.post('/stream', async (req, res, next) => {
     const completion = await openai.createCompletion({
       model: "text-davinci-003",
       prompt,
-      max_tokens: 2000,
+      max_tokens: 3000,
       temperature: 0.2,
       stream: true
     }, { responseType: 'stream' })
